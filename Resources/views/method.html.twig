@@ -179,7 +179,7 @@
                             <td>
                                 <h4>
                                     {{ status_code }}
-                                    {% if data.statusCodes is defined and data.statusCodes[status_code] is defined %}
+                                    {% if data.statusCodes[status_code] is defined %}
                                         - {{ data.statusCodes[status_code]|join(', ') }}
                                     {% endif %}
                                 </h4>
@@ -245,7 +245,7 @@
                                         <p class="tuple">
                                             <input type="text" class="key" value="{{ name }}" placeholder="Key" />
                                             <span>=</span>
-                                            <input type="text" class="value" placeholder="{% if infos.description is defined %}{{ infos.description }}{% else %}Value{% endif %}" {% if infos.default is defined %} value="{{ infos.default }}" {% endif %}/> <span class="remove">-</span>
+                                            <input type="text" class="value" placeholder="{% if infos.description is defined %}{{ infos.description }}{% else %}Value{% endif %}" {% if infos.default is defined %} value="{{ infos.default }}" {% endif %}/>
                                         </p>
                                     {% endfor %}
                                 {% endif %}
@@ -258,12 +258,13 @@
                                             <input type="text" class="value" placeholder="{% if infos.description is defined %}{{ infos.description }}{% else %}Value{% endif %}" {% if infos.default is defined %} value="{{ infos.default }}" {% endif %}/> <span class="remove">-</span>
                                         </p>
                                     {% endfor %}
+                                    <button type="button" class="add_filter">New filter</button>
                                 {% endif %}
                                 {% if data.parameters is defined %}
                                     <h4>Parameters</h4>
                                     {% for name, infos in data.parameters %}
                                     {% if not infos.readonly %}
-                                        <p class="tuple" data-dataType="{% if infos.dataType %}{{ infos.dataType }}{% endif %}" data-format="{% if infos.format %}{{ infos.format }} {% endif %}" data-description="{% if infos.description %}{{ infos.description|trans }}{% endif %}">
+                                        <p class="tuple" data-dataType="{% if infos.dataType %}{{ infos.dataType }}{% endif %}" data-format="{% if infos.format %}{{ infos.format }} {% endif %}" data-description="{% if infos.description %}{{ infos.description }}{% endif %}">
                                             <input type="text" class="key" value="{{ name }}" placeholder="Key" />
                                             <span>=</span>
                                             <select class="tuple_type">
@@ -273,7 +274,7 @@
                                                 <option value="file">File</option>
                                                 <option value="textarea">Textarea</option>
                                             </select>
-                                            <input type="text" class="value" placeholder="{% if infos.dataType %}[{{ infos.dataType }}] {% endif %}{% if infos.format %}{{ infos.format }}{% endif %}{% if infos.description %}{{ infos.description|trans }}{% else %}Value{% endif %}" {% if infos.default is defined %} value="{{ infos.default }}" {% endif %}/> <span class="remove">-</span>
+                                            <input type="text" class="value" placeholder="{% if infos.dataType %}[{{ infos.dataType }}] {% endif %}{% if infos.format %}{{ infos.format }}{% endif %}{% if infos.description %}{{ infos.description }}{% else %}Value{% endif %}" {% if infos.default is defined %} value="{{ infos.default }}" {% endif %}/> <span class="remove">-</span>
                                         </p>
                                     {% endif %}
                                     {% endfor %}
@@ -344,6 +345,13 @@
                             </div>
                         </form>
 
+                        <script type="text/x-tmpl" class="filters_tuple_template">
+                        <p class="tuple">
+                            <input type="text" class="key" value="" placeholder="Key" />
+                            <span>=</span>
+                            <input type="text" class="value" placeholder="value" value=""/> <span class="remove">-</span>
+                        </p>
+                        </script>
                         <script type="text/x-tmpl" class="parameters_tuple_template">
                         <p class="tuple">
                             <input type="text" class="key" placeholder="Key" />

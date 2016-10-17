@@ -22,6 +22,7 @@
                     <select id="body_format">
                         {% if 'form' in bodyFormats %}<option value="form"{{ defaultBodyFormat == 'form' ? ' selected' : '' }}>Form Data</option>{% endif %}
                         {% if 'json' in bodyFormats %}<option value="json"{{ defaultBodyFormat == 'json' ? ' selected' : '' }}>JSON</option>{% endif %}
+                        {% if 'xml' in bodyFormats %}<option value="xml"{{ defaultBodyFormat == 'xml' ? ' selected' : '' }}>XML</option>{% endif %}
                     </select>
                     {% endif %}
                     {% if requestFormats|length > 0 %}
@@ -264,15 +265,37 @@
                             var okey;
                             var value = body[key];
                             var dictMatch = key.match(/^(.+)\[([^\]]+)\]$/);
+                            let array_match = key.match(/^(.+)\[(\d+)\]$/);
+                            let array_of_object_match = key.match(/^(.+)\[(\d+)\]\[(\w+)\]$/);
 
-                            if(dictMatch) {
+                            if( array_match ){
+								let array_name = array_match[1];
+								let idx = array_of_object_match[2];
+								if( ! Array.isArray(body[array_name]) ){
+									body[array_name] = [];
+								}
+								body[array_name][idx] = value;
+                                delete body[key];
+                            } else if( array_of_object_match ){
+								let array_name = array_of_object_match[1];
+								let idx = array_of_object_match[2];
+								let property = array_of_object_match[3];
+								if( ! Array.isArray(body[array_name]) ){
+									body[array_name] = [];
+								}
+								if( ! (body[array_name][idx] instanceof Object) ){
+									body[array_name][idx] = {};
+								}
+								body[array_name][idx][property] = value;
+                                delete body[key];
+                            } else if(dictMatch) {
                                 found = true;
                                 okey = dictMatch[1];
                                 var subkey = dictMatch[2];
                                 body[okey] = body[okey] || {};
                                 body[okey][subkey] = value;
                                 delete body[key];
-                            } else {
+							} else {
                                 body[key] = value;
                             }
                         }
@@ -341,7 +364,7 @@
                 };
 
                 var displayRequestBody = function(method, data, container, header) {
-                    if ('GET' != method && !jQuery.isEmptyObject(data) && data !== "" && data !== undefined) {
+                    if (('GET' != method || 'DELETE' != method) && !jQuery.isEmptyObject(data) && data !== "" && data !== undefined) {
                         if (jQuery.type(data) !== 'string') {
                             data = decodeURIComponent(jQuery.param(data));
                         }
@@ -462,9 +485,11 @@
 
                     if(!('Content-type' in headers)) {
                         if (bodyFormat == 'form') {
-                            headers['Content-type'] = 'application/x-www-form-urlencoded';
+                            headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                        } else if (bodyFormat == 'xml') {
+                            headers['Content-Type'] = 'text/xml';
                         } else {
-                            headers['Content-type'] = 'application/json';
+                            headers['Content-Type'] = 'application/json';
                         }
                     }
 
@@ -621,7 +646,7 @@
                         ajaxOptions.data = formData;
                         ajaxOptions.processData = false;
                         ajaxOptions.contentType = false;
-                        delete(headers['Content-type']);
+                        delete(headers['Content-Type']);
                     }
 
                     // and trigger the API call
@@ -668,7 +693,7 @@
                     e.preventDefault();
                 });
 
-                $('.pane.sandbox').on('click', '.to-expand, .to-shrink', function(e) {
+                $('.pane.sandbox').on('click', 'a.to-expand', function(e) {
                     var $headers = $(this).parents('.result').find('.headers');
                     var $label = $(this).parents('.result').find('a.to-expand');
 
@@ -698,6 +723,13 @@
                 });
 
 
+                $('.pane.sandbox').on('click', '.add_filter', function() {
+                    var html = $(this).parents('.pane').find('.filters_tuple_template').html();
+
+                    $(this).before(html);
+
+                    return false;
+                });
 
                 $('.pane.sandbox').on('click', '.add_parameter', function() {
                     var html = $(this).parents('.pane').find('.parameters_tuple_template').html();
